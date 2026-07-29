@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapeador de Pilares & Matriz de Pautas</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      
+      /* Cores dos Pilares */
+      --pilar-educacao: #3b82f6;
+      --pilar-autoridade: #8b5cf6;
+      --pilar-vendas: #ef4444;
+      --pilar-engajamento: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    header p {
+      color: var(--text-muted);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Formulário */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary);
+    }
+
+    button.btn-add {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button.btn-add:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Indicador de Equilíbrio */
+    .balance-item {
+      margin-bottom: 12px;
+    }
+
+    .balance-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Matriz de Conteúdo (Tabela) */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    /* Tags de Pilares */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .badge-educacao { background-color: var(--pilar-educacao); }
+    .badge-autoridade { background-color: var(--pilar-autoridade); }
+    .badge-vendas { background-color: var(--pilar-vendas); }
+    .badge-engajamento { background-color: var(--pilar-engajamento); }
+
+    /* Lista dentro da matriz */
+    .pauta-item {
+      background: #f8fafc;
+      border-left: 3px solid var(--border);
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    .btn-delete:hover {
+      color: var(--pilar-vendas);
+    }
+
+    .empty-cell {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Mapeador de Pilares & Matriz de Pautas</h1>
+      <p>Gerencie a distribuição estratégica do seu conteúdo editorial</p>
+    </header>
+
+    <div class="grid-layout">
+      <aside>
+        <div class="card">
+          <h2>Nova Pauta</h2>
+          <form id="formPauta">
+            <div class="form-group">
+              <label for="titulo">Título / Tópico da Pauta</label>
+              <input type="text" id="titulo" placeholder="Ex: 5 erros comuns no SEO" required>
+            </div>
+
+            <div class="form-group">
+              <label for="pilar">Pilar de Conteúdo</label>
+              <select id="pilar" required>
+                <option value="educacao">Educação</option>
+                <option value="autoridade">Autoridade / Bastidores</option>
+                <option value="vendas">Vendas / Conversão</option>
+                <option value="engajamento">Engajamento / Conexão</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="formato">Formato</label>
+              <select id="formato" required>
+                <option value="carrossel">Carrossel / Post</option>
+                <option value="reels">Reels / Vídeo Curto</option>
+                <option value="stories">Stories</option>
+                <option value="newsletter">E-mail / Newsletter</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-add">Adicionar à Matriz</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Equilíbrio de Pilares</h2>
+          <div id="balanceContainer">
+            </div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="card">
+          <h2>Matriz de Conteúdo</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Formato</th>
+                  <th><span class="badge badge-educacao">Educação</span></th>
+                  <th><span class="badge badge-autoridade">Autoridade</span></th>
+                  <th><span class="badge badge-vendas">Vendas</span></th>
+                  <th><span class="badge badge-engajamento">Engajamento</span></th>
+                </tr>
+              </thead>
+              <tbody id="matrixBody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Estrutura Inicial de Dados
+    const pilares = {
+      educacao: { nome: 'Educação', color: 'var(--pilar-educacao)' },
+      autoridade: { nome: 'Autoridade', color: 'var(--pilar-autoridade)' },
+      vendas: { nome: 'Vendas', color: 'var(--pilar-vendas)' },
+      engajamento: { nome: 'Engajamento', color: 'var(--pilar-engajamento)' }
+    };
+
+    const formatos = {
+      carrossel: 'Carrossel / Post',
+      reels: 'Reels / Vídeo Curto',
+      stories: 'Stories',
+      newsletter: 'E-mail / Newsletter'
+    };
+
+    // Dados Iniciais Exemplo
+    let pautas = [
+      { id: 1, titulo: 'Checklist de SEO para Landing Pages', pilar: 'educacao', formato: 'carrossel' },
+      { id: 2, titulo: 'Como organizamos a rotina da equipe', pilar: 'autoridade', formato: 'reels' },
+      { id: 3, titulo: 'Oferta especial de Consultoria', pilar: 'vendas', formato: 'newsletter' }
+    ];
+
+    // Elementos do DOM
+    const formPauta = document.getElementById('formPauta');
+    const matrixBody = document.getElementById('matrixBody');
+    const balanceContainer = document.getElementById('balanceContainer');
+
+    // Inicialização
+    function init() {
+      renderMatrix();
+      renderBalance();
+    }
+
+    // Adicionar Nova Pauta
+    formPauta.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById('titulo').value;
+      const pilar = document.getElementById('pilar').value;
+      const formato = document.getElementById('formato').value;
+
+      const novaPauta = {
+        id: Date.now(),
+        titulo,
+        pilar,
+        formato
+      };
+
+      pautas.push(novaPauta);
+      formPauta.reset();
+      
+      renderMatrix();
+      renderBalance();
+    });
+
+    // Deletar Pauta
+    function deletePauta(id) {
+      pautas = pautas.filter(p => p.id !== id);
+      renderMatrix();
+      renderBalance();
+    }
+
+    // Renderizar Tabela da Matriz
+    function renderMatrix() {
+      matrixBody.innerHTML = '';
+
+      Object.keys(formatos).forEach(formatoKey => {
+        const tr = document.createElement('tr');
+        
+        // Coluna do Formato
+        const tdFormat = document.createElement('td');
+        tdFormat.innerHTML = `<strong>${formatos[formatoKey]}</strong>`;
+        tr.appendChild(tdFormat);
+
+        // Colunas de cada Pilar
+        Object.keys(pilares).forEach(pilarKey => {
+          const tdPilar = document.createElement('td');
+          const pautasFiltradas = pautas.filter(p => p.formato === formatoKey && p.pilar === pilarKey);
+
+          if (pautasFiltradas.length === 0) {
+            tdPilar.innerHTML = `<span class="empty-cell">Vazio</span>`;
+          } else {
+            pautasFiltradas.forEach(item => {
+              const itemDiv = document.createElement('div');
+              itemDiv.className = 'pauta-item';
+              itemDiv.style.borderLeftColor = pilares[pilarKey].color;
+              itemDiv.innerHTML = `
+                <span>${item.titulo}</span>
+                <button class="btn-delete" onclick="deletePauta(${item.id})">&times;</button>
+              `;
+              tdPilar.appendChild(itemDiv);
+            });
+          }
+          tr.appendChild(tdPilar);
+        });
+
+        matrixBody.appendChild(tr);
+      });
+    }
+
+    // Renderizar Métrica de Equilíbrio
+    function renderBalance() {
+      balanceContainer.innerHTML = '';
+      const totalPautas = pautas.length;
+
+      Object.keys(pilares).forEach(pilarKey => {
+        const count = pautas.filter(p => p.pilar === pilarKey).length;
+        const percentage = totalPautas > 0 ? Math.round((count / totalPautas) * 100) : 0;
+
+        const balanceItem = document.createElement('div');
+        balanceItem.className = 'balance-item';
+        balanceItem.innerHTML = `
+          <div class="balance-header">
+            <span>${pilares[pilarKey].nome} (${count})</span>
+            <span>${percentage}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${percentage}%; background-color: ${pilares[pilarKey].color}"></div>
+          </div>
+        `;
+        balanceContainer.appendChild(balanceItem);
+      });
+    }
+
+    // Executa ao carregar a página
+    init();
+  </script>
+</body>
+</html>
